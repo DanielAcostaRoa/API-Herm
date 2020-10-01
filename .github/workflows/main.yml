@@ -1,0 +1,39 @@
+name: Azure Web App Container
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: azure/login@v1.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Update docker compose file
+      env:
+        HASURA_GRAPHQL_DATABASE_URL: ${{ secrets.HASURA_GRAPHQL_DATABASE_URL }}
+      run: |
+        az webapp config container set \
+          --multicontainer-config-file docker-compose.prod.yml \
+          --multicontainer-config-type compose \
+          --resource-group herm \
+          --name hermapi
+    - name: Update database connection string
+      env:
+        HASURA_GRAPHQL_DATABASE_URL: ${{ secrets.HASURA_GRAPHQL_DATABASE_URL }}
+      run: |
+        az webapp config appsettings set \
+          --resource-group herm \
+          --name hermapi \
+          --settings HASURA_GRAPHQL_DATABASE_URL=$HASURA_GRAPHQL_DATABASE_URL
+    - name: Update Hasura config
+      run: |
+        az webapp config appsettings set \
+          --resource-group herm \
+          --name hermapi \
+          --settings \
+            HASURA_GRAPHQL_ENABLE_CONSOLE="true" \
+            HASURA_GRAPHQL_ENABLED_LOG_TYPES="startup, http-log, webhook-log, websocket-log, query-log"

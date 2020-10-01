@@ -1,0 +1,105 @@
+- table:
+    schema: public
+    name: account
+  array_relationships:
+  - name: account_users
+    using:
+      foreign_key_constraint_on:
+        column: account_id
+        table:
+          schema: public
+          name: account_user
+  insert_permissions:
+  - role: user
+    permission:
+      check: {}
+      columns:
+      - account_name
+      - access_token
+      - id
+      - created_at
+      - access_token_secret
+  select_permissions:
+  - role: user
+    permission:
+      columns:
+      - account_name
+      - access_token
+      - id
+      - created_at
+      - access_token_secret
+      filter: {}
+- table:
+    schema: public
+    name: account_user
+  object_relationships:
+  - name: account
+    using:
+      foreign_key_constraint_on: account_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+  insert_permissions:
+  - role: user
+    permission:
+      check:
+        user:
+          username:
+            _eq: X-Hasura-User-Id
+      columns:
+      - account_id
+      - user_id
+      - id
+      - created_at
+  select_permissions:
+  - role: user
+    permission:
+      columns:
+      - account_id
+      - user_id
+      - id
+      - created_at
+      filter: {}
+  delete_permissions:
+  - role: user
+    permission:
+      filter:
+        user:
+          username:
+            _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: user
+  array_relationships:
+  - name: user_accounts
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: account_user
+  insert_permissions:
+  - role: user
+    permission:
+      check: {}
+      columns:
+      - username
+      - id
+      - created_at
+  select_permissions:
+  - role: user
+    permission:
+      columns:
+      - created_at
+      - id
+      - username
+      filter: {}
+  update_permissions:
+  - role: user
+    permission:
+      columns:
+      - username
+      - id
+      - created_at
+      filter: {}
+      check: {}
